@@ -42,7 +42,7 @@ sensor:
     name: $friendly_name WiFi Strength
     update_interval: 60s
   - platform: uptime
-    name: $friendly_name "Uptime"
+    name: $friendly_name Uptime
 
   - platform: dht
     pin: 21
@@ -67,6 +67,8 @@ sensor:
   - platform: template
     name: "Temperature Right"
     id: temperature_right
+    unit_of_measurement: "°C"
+    device_class: "temperature"
     update_interval: 10s
     lambda: |-
       float b = id(temperature_right_bottom).state;
@@ -76,11 +78,13 @@ sensor:
 switch:
   - platform: gpio
     id: console_fan_right
+    icon: mdi:fan
     pin: 32
     name: "Console Fan Right"
 
   - platform: gpio
     id: console_fan_left
+    icon: mdi:fan
     pin: 33
     name: "Console Fan Left (unused)"
 
@@ -89,7 +93,10 @@ climate:
   - platform: thermostat
     name: "Console Fan & Thermostat Controller"
     sensor: temperature_right
-    default_target_temperature_high: 25 °C
+    default_target_temperature_high: 30 °C
+    visual:
+      min_temperature: 20 °C
+      max_temperature: 50 °C
     min_cooling_off_time: 300s
     min_cooling_run_time: 300s
     min_idle_time: 30s
