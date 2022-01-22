@@ -1,0 +1,86 @@
+substitutions:
+  friendly_name: Garage
+
+esphome:
+  name: garage-door-v2
+
+esp32:
+  board: nodemcu-32s
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: ""
+
+ota:
+  password: ""
+
+wifi:
+  ssid: "Collins Household"
+  password: "eatapples2"
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "garage-door-v2"
+    password: "O2YQivORnPXe"
+
+captive_portal:
+
+# Send IP Address to HA
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: $friendly_name IP Address
+
+# Send WiFi signal strength & uptime to HA
+sensor:
+  - platform: wifi_signal
+    name: $friendly_name WiFi Strength
+    update_interval: 60s
+  - platform: uptime
+    name: $friendly_name "Uptime"
+
+binary_sensor:
+  - platform: gpio
+    pin: GPIO5
+    name: "Garage Door Contact Sensor"
+    id: contact_sensor
+    internal: true
+    filters:
+      - invert:
+
+# The relay that will deliver the pulse to
+# the garage door opener (not exposed to HA)
+switch:
+  - platform: gpio
+    pin: GPIO4
+    name: "Garage Door Relay"
+    id: relay
+    internal: true
+
+# This creates the actual garage door in HA. The state is based
+# on the contact sensor. Opening/closing the garage door simply
+# turns the relay on/off with a 0.5s delay in between.
+cover:
+  - platform: template
+    device_class: garage
+    name: "Garage Door v2"
+    id: template_cov
+    lambda: |-
+      if (id(contact_sensor).state) {
+        return COVER_OPEN;
+      } else {
+        return COVER_CLOSED;
+      }
+    open_action:
+      - switch.turn_on: relay
+      - delay: 1s
+      - switch.turn_off: relay
+    close_action:
+      - switch.turn_on: relay
+      - delay: 1s
+      - switch.turn_off: relay
