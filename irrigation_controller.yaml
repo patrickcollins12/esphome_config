@@ -1,0 +1,96 @@
+substitutions:
+  friendly_name: Irrigation Controller
+
+esphome:
+  name: irrigation-controller
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: ""
+
+ota:
+  password: ""
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "irrigation-controller"
+    password: "O2YQivORnPXe"
+
+captive_portal:
+
+# Send IP Address to HA
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: $friendly_name IP Address
+
+# Send WiFi signal strength & uptime to HA
+sensor:
+  - platform: wifi_signal
+    name: $friendly_name WiFi Strength
+    update_interval: 60s
+  - platform: uptime
+    name: $friendly_name Uptime
+
+  - platform: dht
+    pin: 21
+    temperature:
+      name: "Irrigation Temperature"
+    humidity:
+      name: "Irrigation Humidity"
+    update_interval: 10s
+
+  - platform: adc
+    pin: 33
+    device_class: battery
+    name: "Irrigation Battery"
+    update_interval: 60s
+
+binary_sensor:
+  - platform: gpio
+    pin: GPIO5
+    name: "Button Switch"
+    internal: true
+
+switch:
+  - platform: gpio
+    pin: 19
+    name: "Push Switch"
+    id: push_switch
+    internal: true
+    on_turn_on:
+     - delay: 500ms
+     - switch.turn_off: push_switch
+    interlock: [pull_switch]
+
+  - platform: gpio
+    pin: 18
+    name: "Pull Switch"
+    id: pull_switch
+    internal: true
+    on_turn_on:
+     - delay: 500ms
+     - switch.turn_off: pull_switch
+    interlock: [push_switch]
+
+  - platform: template
+    name: "Irrigation"
+    id: irrigation
+    restore_state: true
+    optimistic: true
+    turn_on_action: 
+      - switch.turn_on: push_switch
+    turn_off_action: 
+      - switch.turn_on: pull_switch    
