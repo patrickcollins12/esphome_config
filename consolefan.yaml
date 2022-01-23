@@ -45,7 +45,7 @@ sensor:
     name: $friendly_name Uptime
 
   - platform: dht
-    pin: 21
+    pin: 3
     temperature:
       name: "Temperature Right Top"
       id: temperature_right_top
@@ -54,26 +54,26 @@ sensor:
       id: humidity_right_top
     update_interval: 10s
 
-  - platform: dht
-    pin: 19
-    temperature:
-      name: "Temperature Right Bottom"
-      id: temperature_right_bottom
-    humidity:
-      name: "Humidity Right Bottom"
-      id: humidity_right_bottom
-    update_interval: 10s
+  # - platform: dht
+  #   pin: 19
+  #   temperature:
+  #     name: "Temperature Right Bottom"
+  #     id: temperature_right_bottom
+  #   humidity:
+  #     name: "Humidity Right Bottom"
+  #     id: humidity_right_bottom
+  #   update_interval: 10s
 
-  - platform: template
-    name: "Temperature Right"
-    id: temperature_right
-    unit_of_measurement: "°C"
-    device_class: "temperature"
-    update_interval: 10s
-    lambda: |-
-      float b = id(temperature_right_bottom).state;
-      float t = id(temperature_right_top).state;
-      return (b > t)? b : t;
+  # - platform: template
+  #   name: "Temperature Right"
+  #   id: temperature_right
+  #   unit_of_measurement: "°C"
+  #   device_class: "temperature"
+  #   update_interval: 10s
+  #   lambda: |-
+  #     float b = id(temperature_right_bottom).state;
+  #     float t = id(temperature_right_top).state;
+  #     return (b > t)? b : t;
 
 switch:
   - platform: gpio
@@ -92,7 +92,7 @@ switch:
 climate:
   - platform: thermostat
     name: "Console Fan & Thermostat Controller"
-    sensor: temperature_right
+    sensor: temperature_right_top
     default_target_temperature_high: 30 °C
     visual:
       min_temperature: 20 °C
