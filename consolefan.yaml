@@ -36,13 +36,40 @@ text_sensor:
     ip_address:
       name: $friendly_name IP Address
 
+  - platform: template
+    name: $friendly_name Uptime
+    id: uptime_human
+    icon: mdi:clock-start
+
 # Send WiFi signal strength & uptime to HA
 sensor:
+
   - platform: wifi_signal
     name: $friendly_name WiFi Strength
     update_interval: 60s
+
   - platform: uptime
     name: $friendly_name Uptime
+    id: uptime_sensor
+    update_interval: 60s
+    on_raw_value:
+      then:
+        - text_sensor.template.publish:
+            id: uptime_human
+            state: !lambda |-
+              int seconds = round(id(uptime_sensor).raw_state);
+              int days = seconds / (24 * 3600);
+              seconds = seconds % (24 * 3600);
+              int hours = seconds / 3600;
+              seconds = seconds % 3600;
+              int minutes = seconds /  60;
+              seconds = seconds % 60;
+              return (
+                (days ? to_string(days) + "d " : "") +
+                (hours ? to_string(hours) + "h " : "") +
+                (minutes ? to_string(minutes) + "m " : "") +
+                (to_string(seconds) + "s")
+              ).c_str();
 
   - platform: dht
     pin: 3
@@ -52,28 +79,28 @@ sensor:
     humidity:
       name: "Humidity Right Top"
       id: humidity_right_top
-    update_interval: 10s
+    update_interval: 30s
 
-  # - platform: dht
-  #   pin: 19
-  #   temperature:
-  #     name: "Temperature Right Bottom"
-  #     id: temperature_right_bottom
-  #   humidity:
-  #     name: "Humidity Right Bottom"
-  #     id: humidity_right_bottom
-  #   update_interval: 10s
+  - platform: dht
+    pin: 21
+    temperature:
+      name: "Temperature Right Bottom"
+      id: temperature_right_bottom
+    humidity:
+      name: "Humidity Right Bottom"
+      id: humidity_right_bottom
+    update_interval: 30s
 
-  # - platform: template
-  #   name: "Temperature Right"
-  #   id: temperature_right
-  #   unit_of_measurement: "°C"
-  #   device_class: "temperature"
-  #   update_interval: 10s
-  #   lambda: |-
-  #     float b = id(temperature_right_bottom).state;
-  #     float t = id(temperature_right_top).state;
-  #     return (b > t)? b : t;
+  - platform: template
+    name: "Temperature Right"
+    id: temperature_right
+    unit_of_measurement: "°C"
+    device_class: "temperature"
+    update_interval: 30s
+    lambda: |-
+      float b = id(temperature_right_bottom).state;
+      float t = id(temperature_right_top).state;
+      return (b > t)? b : t;
 
 switch:
   - platform: gpio
@@ -82,26 +109,34 @@ switch:
     pin: 32
     name: "Console Fan Right"
 
-  - platform: gpio
-    id: console_fan_left
-    icon: mdi:fan
-    pin: 33
-    name: "Console Fan Left (unused)"
-
+  # - platform: gpio
+  #   id: console_fan_left
+  #   icon: mdi:fan
+  #   pin: 33
+  #   name: "Console Fan Left (unused)"
 
 climate:
   - platform: thermostat
     name: "Console Fan & Thermostat Controller"
-    sensor: temperature_right_top
+    sensor: temperature_right
     default_target_temperature_high: 30 °C
     visual:
       min_temperature: 20 °C
       max_temperature: 50 °C
-    min_cooling_off_time: 300s
-    min_cooling_run_time: 300s
+      
+    # min_cooling_off_time. Minimum duration the cooling action
+    # must be disengaged before it may be engaged.
+    min_cooling_off_time: 30s
+
+    # min_cooling_run_time. Minimum duration the cooling action
+    # must be engaged before it may be disengaged.
+    min_cooling_run_time: 600s
+
+    # min_idle_time. Minimum duration the idle action must be 
+    # active before calling another climate action.
     min_idle_time: 30s
+
     cool_action:
       - switch.turn_on: console_fan_right
     idle_action:
       - switch.turn_off: console_fan_right
-

@@ -44,53 +44,59 @@ sensor:
   - platform: uptime
     name: $friendly_name Uptime
 
-  - platform: dht
-    pin: 21
-    temperature:
-      name: "Irrigation Temperature"
-    humidity:
-      name: "Irrigation Humidity"
-    update_interval: 10s
+#   - platform: dht
+#     pin: 21
+#     temperature:
+#       name: "Irrigation Temperature"
+#     humidity:
+#       name: "Irrigation Humidity"
+#     update_interval: 10s
 
   - platform: adc
     pin: 33
     device_class: battery
     name: "Irrigation Battery"
     update_interval: 60s
+    filters: 
+    # float v_batt = v / (100.0/(100.0+47.0));
+    # v = v * 1 / 0.680272
+    # v = v * 1.47
+      - multiply: 3.3
 
-binary_sensor:
-  - platform: gpio
-    pin: GPIO5
-    name: "Button Switch"
-    internal: true
 
-switch:
-  - platform: gpio
-    pin: 19
-    name: "Push Switch"
-    id: push_switch
-    internal: true
-    on_turn_on:
-     - delay: 500ms
-     - switch.turn_off: push_switch
-    interlock: [pull_switch]
+# binary_sensor:
+#   - platform: gpio
+#     pin: GPIO5
+#     name: "Button Switch"
+#     internal: true
 
-  - platform: gpio
-    pin: 18
-    name: "Pull Switch"
-    id: pull_switch
-    internal: true
-    on_turn_on:
-     - delay: 500ms
-     - switch.turn_off: pull_switch
-    interlock: [push_switch]
+# switch:
+#   - platform: gpio
+#     pin: 19
+#     name: "Push Switch"
+#     id: push_switch
+#     internal: true
+#     on_turn_on:
+#      - delay: 500ms
+#      - switch.turn_off: push_switch
+#     interlock: [pull_switch]
 
-  - platform: template
-    name: "Irrigation"
-    id: irrigation
-    restore_state: true
-    optimistic: true
-    turn_on_action: 
-      - switch.turn_on: push_switch
-    turn_off_action: 
-      - switch.turn_on: pull_switch    
+#   - platform: gpio
+#     pin: 18
+#     name: "Pull Switch"
+#     id: pull_switch
+#     internal: true
+#     on_turn_on:
+#      - delay: 500ms
+#      - switch.turn_off: pull_switch
+#     interlock: [push_switch]
+
+#   - platform: template
+#     name: "Irrigation"
+#     id: irrigation
+#     restore_state: true
+#     optimistic: true
+#     turn_on_action: 
+#       - switch.turn_on: push_switch
+#     turn_off_action: 
+#       - switch.turn_on: pull_switch    
