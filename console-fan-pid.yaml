@@ -132,16 +132,23 @@ power_supply:
     pin: 33
 
 output:
-  - platform: ledc
-    pin: 14
-    # min_power: 20%
-    power_supply: fan_power_supply
-    id: console_fan_speed
+  # - platform: ledc
+  #   pin: 14
+  #   # min_power: 20%
+  #   power_supply: fan_power_supply
+  #   id: console_fan_speed
 
+  - platform: ledc
+    pin: 15
+    frequency: "25000 Hz"
+    # min_power: 15%
+    # power_supply: fan_power_supply
+    id: console_fan_speed
+    
   # # dummy heater
   - platform: ledc
     pin: 27
-    frequency: "25000Hz"
+    frequency: "25000 Hz"
     id: console_heat_speed
 
 fan:
