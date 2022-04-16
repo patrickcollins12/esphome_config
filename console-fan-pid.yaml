@@ -3,6 +3,7 @@ substitutions:
 
 esphome:
   name: console-fan-pid
+  
 
 esp32:
   board: nodemcu-32s
@@ -22,7 +23,6 @@ wifi:
   ap:
     ssid: "console-fan-ap"
     password: "O2YQivORnPXe"
-
 
     # Example configuration entry
 text_sensor:
@@ -111,7 +111,8 @@ sensor:
       name: "Temperature"
       id: console_fan_pid_temperature
       filters:
-        - sliding_window_moving_average:
+        # - sliding_window_moving_average:
+        - max:
             window_size: 15
             send_every: 15
             send_first_at: 1
@@ -142,6 +143,7 @@ output:
     pin: 15
     frequency: "25000 Hz"
     # min_power: 15%
+    max_power: 80%
     # power_supply: fan_power_supply
     id: console_fan_speed
     
@@ -188,22 +190,15 @@ climate:
       # lower gain is less likely to oscillate, more likely to under react to big changes and will create a bigger offset.
       # higher gain is more likely to oscillate, less likely to under react to big changes and not sure about offset.
       # kp: 0.9
-      kp: 0.3 # much less aggressive and might slowly let 1.5c rack up before it hits 100%. Takes a good 10 minutes to close a .5c gap
+      kp: 0.1 # much less aggressive and might slowly let 1.5c rack up before it hits 100%. Takes a good 10 minutes to close a .5c gap
 
       # 1/s where seconds is how long it should attempt to correct an offset. see table here https://blog.opticontrols.com/archives/344
       # ki: 0.0033 = 1/300 (5 minutes to correct an offset)
       # ki: 0.00333 
-      ki: 0.0008 # close the gap very very slowly. like over 50 minutes?
+      ki: 0.0009 # close the gap very very slowly. like over 50 minutes?
 
       # not sure about this one. it seemed to do well on 30, but let's leave it at 0 for now
       kd: 0
-
-      # 0.43525, ki: 0.00113, kd: 104.67848
-    # # RUN3 customised
-    # control_parameters:
-    #   kp: 1.52338
-    #   ki: 0.00495
-    #   kd: 0
 
 switch:
   - platform: template

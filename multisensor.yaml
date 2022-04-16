@@ -1,0 +1,123 @@
+esphome:
+  name: espvibration1
+  platform: ESP32
+  board: esp32dev
+wifi:
+  ssid: "Collins Household"
+  password: "eatapples2"
+logger:
+api:
+ota:
+captive_portal:
+
+substitutions:
+  friendly_name: multisensor1
+  
+text_sensor:
+  # Send IP Address
+  - platform: wifi_info
+    ip_address:
+      name: $friendly_name IP Address
+
+  # Send Uptime in raw seconds
+  - platform: template
+    name: $friendly_name Uptime (Raw)
+    id: uptime_human
+    icon: mdi:clock-start
+
+
+i2c:
+  # defaults
+
+# Sensors that the ESPhome unit is capable of reporting
+sensor:
+  - platform: wifi_signal
+    name: $friendly_name WiFi Signal
+    update_interval: 60s
+
+  - platform: dht
+    pin: GPIO12
+    temperature:
+      name: $friendly_name DHT22 Temperature
+      accuracy_decimals: 2
+    humidity:
+      name: $friendly_name DHT22 Humidity
+      accuracy_decimals: 3
+    update_interval: 30s
+    
+
+  # https://esphome.io/components/sensor/tsl2591.html
+  - platform: tsl2591
+    name: "Ambient Light Sensor"
+    id: "tls2591"
+    # address: 0x29 # default
+    update_interval: 30s
+    # device_factor: 53
+    # glass_attenuation_factor: 14.4
+    visible:
+      name: "TSL2591 visible light"
+    infrared:
+      name: "TSL2591 infrared light"
+    full_spectrum:
+      name: "TSL2591 full spectrum light"
+    calculated_lux:
+      id: i_lux
+      name: "TSL2591 Lux"
+
+  # https://esphome.io/components/sensor/bme280.html
+  - platform: bme280
+    temperature:
+      name: "BME280 Temperature"
+      accuracy_decimals: 3
+    pressure:
+      name: "BME280 Pressure"
+      accuracy_decimals: 3
+      filters:
+        - offset: 17.4
+    humidity:
+      name: "BME280 Humidity"
+      accuracy_decimals: 3
+    address: 0x76
+    update_interval: 30s
+
+  - platform: uptime
+    name: $friendly_name Uptime (Pretty)
+    id: uptime_sensor
+    update_interval: 10s
+    on_raw_value:
+      then:
+        - text_sensor.template.publish:
+            id: uptime_human
+            # Custom C++ code to generate the result
+            state: !lambda |-
+              int seconds = round(id(uptime_sensor).raw_state);
+              int days = seconds / (24 * 3600);
+              seconds = seconds % (24 * 3600);
+              int hours = seconds / 3600;
+              seconds = seconds % 3600;
+              int minutes = seconds /  60;
+              seconds = seconds % 60;
+              return (
+                (days ? to_string(days) + "d " : "") +
+                (hours ? to_string(hours) + "h " : "") +
+                (minutes ? to_string(minutes) + "m " : "") +
+                (to_string(seconds) + "s")
+              ).c_str();
+
+# Enables the SW-420 Vibration Sensor
+binary_sensor:  
+  - platform: gpio  
+    name: $friendly_name Vibration Sensor
+    pin:
+      number: GPIO32
+      mode: INPUT
+    device_class: vibration
+    filters:
+     - delayed_on: 10ms
+     - delayed_off: 5sec
+
+  - platform: gpio
+    pin: GPIO33
+    name: $friendly_name PIR Sensor
+    device_class: motion
+    
