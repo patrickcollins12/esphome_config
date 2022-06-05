@@ -1,0 +1,29 @@
+substitutions:
+  friendly_name: led-strip
+
+packages:
+  device_base: !include device_base_esp32.yaml
+
+light:
+  - platform: neopixelbus
+    type: GRB
+    variant: WS2812X
+    pin: GPIO23
+    num_leds: 144
+    name: "NeoPixel Light"
+
+    effects:
+      - random:
+      - addressable_color_wipe:
+      - addressable_scan:
+          move_interval: 20ms
+          scan_width: 3
+      - addressable_twinkle:
+      - addressable_random_twinkle:
+      - addressable_fireworks:
+      - addressable_flicker:
+      - addressable_rainbow:
+      - addressable_rainbow:
+          name: Rainbow Effect Long
+          speed: 5
+          width: 2000

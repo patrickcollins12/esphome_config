@@ -25,7 +25,7 @@ text_sensor:
     name: $friendly_name Uptime
     id: uptime_human
     icon: mdi:clock-start
-
+    update_interval: 60s
 
 i2c:
   # defaults
@@ -56,10 +56,18 @@ sensor:
     address: 0x76
     update_interval: 60s
 
+  # - platform: template
+  #   name: "keepalive for sw420"
+  #   internal: True
+  #   lambda: |-
+  #     id(sw420).publish_state(id(sw420).state);
+  #     return 1;
+  #   update_interval: 6s
+
   - platform: uptime
     internal: true
     id: uptime_sensor
-    update_interval: 300s
+    update_interval: 60s
     on_raw_value:
       then:
         - text_sensor.template.publish:
@@ -151,8 +159,8 @@ binary_sensor:
     device_class: vibration
     filters:
      - delayed_on: 10ms
-     - delayed_off: 5sec
-
+     - delayed_off: 10min
+    #  - delayed_off: 1sec
 
 # We can still control the backlight independently
 switch:
@@ -192,7 +200,11 @@ display:
       it.print(5, 5, id(helvetica_24), id(my_gray), TextAlign::TOP_LEFT, id(uptime_human).state.c_str());
 
       // Online / Offline
-      it.print(235, 5, id(helvetica_24), id(my_green), TextAlign::TOP_RIGHT, (id(system_status).state)?"Online":"Offline" );
+      if (id(system_status).state) {
+        it.print(235, 5, id(helvetica_24), id(my_green), TextAlign::TOP_RIGHT, "Online" );
+      }  else {
+        it.print(235, 5, id(helvetica_24), id(my_red),   TextAlign::TOP_RIGHT, "Offline" );
+      }
 
       // temp and humidity
       char buffer[64];

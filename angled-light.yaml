@@ -1,0 +1,33 @@
+substitutions:
+  friendly_name: angled-light
+
+packages:
+  device_base: !include device_base_8266.yaml
+
+light:
+  - platform: neopixelbus
+    type: GRBW
+    variant: SK6812
+    pin: GPIO13
+    num_leds: 11
+    name: "Angled Light"
+    icon: "mdi:lamp"
+
+    effects:
+      - random:
+      - addressable_color_wipe:
+      - addressable_scan:
+          move_interval: 20ms
+          scan_width: 3
+      - addressable_twinkle:
+      - addressable_random_twinkle:
+      - addressable_fireworks:
+      - addressable_flicker:
+      - addressable_rainbow:
+          name: Rainbow Long Fast
+          speed: 4
+          width: 70
+      - addressable_rainbow:
+          name: Rainbow Long Slow
+          speed: 1
+          width: 70
