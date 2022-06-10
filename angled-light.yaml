@@ -2,7 +2,8 @@ substitutions:
   friendly_name: angled-light
 
 packages:
-  device_base: !include device_base_8266.yaml
+  esp8266: !include device_base_8266_nodemcu.yaml
+  device_base: !include device_base_all.yaml
 
 light:
   - platform: neopixelbus

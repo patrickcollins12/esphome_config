@@ -43,12 +43,12 @@ text_sensor:
 sensor:
 - platform: wifi_signal
   name: "$friendly_name WiFi Signal"
-  update_interval: 60s
+  update_interval: 10min
 
 - platform: uptime
   internal: true
   id: uptime_sensor
-  update_interval: 60s
+  update_interval: 10min
   on_raw_value:
     then:
         - text_sensor.template.publish:
