@@ -1,0 +1,16 @@
+substitutions:
+  friendly_name: sht40
+
+packages:
+  device_base: !include device_base_esp32.yaml
+
+i2c:
+  # defaults
+
+sensor:
+  - platform: sht4x
+    temperature:
+      name: "SHT40 Temperature"
+    humidity:
+      name: "SHT40 Humidity"
+

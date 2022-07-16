@@ -1,0 +1,25 @@
+substitutions:
+  friendly_name: temt6000
+
+packages:
+  device_base: !include device_base_esp32.yaml
+
+i2c:
+  # defaults
+
+sensor:
+  - platform: sht4x
+    temperature:
+      name: "SHT40 Temperature"
+    humidity:
+      name: "SHT40 Humidity"
+
+  - platform: adc
+    pin: GPIO34
+    name: "TEMT6000 Illuminance"
+    device_class: illuminance
+    #update_interval: 3s
+    unit_of_measurement: lx
+    filters:
+      - lambda: |-
+          return (x / 10000.0) * 2000000.0;
