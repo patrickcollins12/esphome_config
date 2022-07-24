@@ -1,0 +1,24 @@
+substitutions:
+  friendly_name: led-ccd-cob
+
+packages:
+  device_base: !include device_base_esp32.yaml
+
+output:
+  - platform: ledc
+    pin: GPIO18
+    id: output_cc
+  - platform: ledc
+    pin: GPIO27
+    id: output_cw
+    # frequency: "100kHz"
+    # min_power: 0.18
+
+light:
+  - platform: cwww
+    name: "Livingroom Lamp"
+    cold_white: output_cc
+    warm_white: output_cw
+    cold_white_color_temperature: 6000 K
+    warm_white_color_temperature: 2700 K
+    constant_brightness: true
