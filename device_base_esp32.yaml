@@ -14,8 +14,8 @@ captive_portal:
 
 switch:
     - platform: restart
-      id: restart1
-      name: $friendly_name ESP32 Restart
+      id: ${friendly_name}_restart
+      name: ESP32 Restart
 
 time:
 - platform: homeassistant
@@ -25,37 +25,39 @@ time:
     minutes: 30
     hours: 0
     then:
-     - switch.turn_on: restart1
+     - switch.turn_on: ${friendly_name}_restart
     
 text_sensor:
   # Send IP Address
   - platform: wifi_info
     ip_address:
-        name: "$friendly_name IP Address"
+        id: ${friendly_name}_ip_address
+        name: "IP Address"
 
     # Send Uptime in raw seconds
   - platform: template
-    name: $friendly_name Uptime
-    id: uptime_human
+    name: Uptime
+    id: ${friendly_name}_uptime_human
     icon: mdi:clock-start
 
 # Sensors that the ESPhome unit is capable of reporting
 sensor:
 - platform: wifi_signal
-  name: "$friendly_name WiFi Signal"
+  id: ${friendly_name}_wifi_signal
+  name: "WiFi Signal"
   update_interval: 10min
 
 - platform: uptime
   internal: true
-  id: uptime_sensor
+  id: ${friendly_name}_uptime_sensor
   update_interval: 10min
   on_raw_value:
     then:
         - text_sensor.template.publish:
-            id: uptime_human
+            id: ${friendly_name}_uptime_human
             # Custom C++ code to generate the result
             state: !lambda |-
-                int seconds = round(id(uptime_sensor).raw_state);
+                int seconds = round(id(${friendly_name}_uptime_sensor).raw_state);
                 int days = seconds / (24 * 3600);
                 seconds = seconds % (24 * 3600);
                 int hours = seconds / 3600;

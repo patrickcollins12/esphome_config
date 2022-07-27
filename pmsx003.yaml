@@ -1,0 +1,22 @@
+substitutions:
+  friendly_name: pmsx003
+
+packages:
+  device_base: !include device_base_esp32.yaml
+
+uart:
+  rx_pin: GPIO23
+  tx_pin: GPIO22
+  baud_rate: 9600
+
+sensor:
+  - platform: pmsx003
+    type: PMSX003
+    pm_1_0:
+      name: "Particulate Matter <1.0µm Concentration"
+    pm_2_5:
+      name: "Particulate Matter <2.5µm Concentration"
+    pm_10_0:
+      name: "Particulate Matter <10.0µm Concentration"
+    update_interval: 60000ms
+  
