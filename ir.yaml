@@ -1,0 +1,26 @@
+substitutions:
+  friendly_name: ir
+
+packages:
+  device_base: !include device_base_esp32.yaml
+
+remote_transmitter:
+  pin: GPIO18
+  carrier_duty_percent: 50%
+
+climate:
+  - platform: daikin
+    name: "Living Room AC"
+
+logger:
+  level: VERBOSE
+    
+remote_receiver:
+  pin:
+    number: GPIO15
+    inverted: true
+  dump: 
+    - pioneer
+    - raw
+
+ 
