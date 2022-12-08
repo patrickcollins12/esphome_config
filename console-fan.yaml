@@ -328,7 +328,12 @@ sensor:
 
   # GET TEMP/HUMIDITY FROM DHT11
   - platform: dht
-    pin: 33
+    pin:
+      number: 33
+      mode:
+        input: true
+        pullup: true
+
     temperature:
       name: "Temperature"
       id: console_fan_temperature

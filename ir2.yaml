@@ -1,0 +1,45 @@
+substitutions:
+  friendly_name: ir2
+
+packages:
+  device_base: !include device_base_esp32.yaml
+
+logger:
+  # level: VERBOSE
+
+sensor:
+  - platform: dht
+    pin:
+      number: GPIO19
+      # mode:
+      #   input: true
+      #   pullup: true
+    temperature:
+      name: "Temperature"
+      id: daikin_temp_sensor
+      accuracy_decimals: 3
+
+    humidity:
+      name: "Humidity"
+      id: daikin_humidity_sensor
+
+    update_interval: 1.3s
+    
+remote_transmitter:
+  pin: GPIO18
+  carrier_duty_percent: 50%
+
+climate:
+  - platform: daikin
+    name: "Test AC Remote"
+    sensor: daikin_temp_sensor
+
+# output:
+#   - platform: ledc
+#     pin: GPIO18
+#     id: leddy
+#     # frequency: 5Hz
+# light:
+#   - platform: monochromatic
+#     output: leddy
+#     name: "Dimmable LED Light"
