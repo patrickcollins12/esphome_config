@@ -7,39 +7,164 @@ packages:
 logger:
   # level: VERBOSE
 
+# DHT11 --> PID Controller --> output_template --> Daikin Controller --> Physical IR LEDs
+# daikin_temp_sensor                               test_ac_remote
+#           daikin_pid_thermostat                                        remote_transmitter
+#                              output_dummy
+
 sensor:
   - platform: dht
     pin:
       number: GPIO19
-      # mode:
-      #   input: true
-      #   pullup: true
+      mode:
+        input: true
+        pullup: true
     temperature:
       name: "Temperature"
       id: daikin_temp_sensor
       accuracy_decimals: 3
+      filters:
+        - exponential_moving_average:
+            alpha: 0.1
+            send_every: 1
 
     humidity:
       name: "Humidity"
       id: daikin_humidity_sensor
 
-    update_interval: 1.3s
-    
+    update_interval: 7s
+
+# The IR LEDs
 remote_transmitter:
   pin: GPIO18
   carrier_duty_percent: 50%
 
+  # The output climate device to control the Daikin
 climate:
   - platform: daikin
     name: "Test AC Remote"
-    sensor: daikin_temp_sensor
+    id: test_ac_remote
+    # sensor: daikin_temp_sensor
 
-# output:
-#   - platform: ledc
-#     pin: GPIO18
-#     id: leddy
-#     # frequency: 5Hz
-# light:
-#   - platform: monochromatic
-#     output: leddy
-#     name: "Dimmable LED Light"
+  - platform: pid
+    name: "Daikin PID Thermostat"
+    id: daikin_pid_thermostat
+
+    sensor: daikin_temp_sensor
+    default_target_temperature: 24°C
+
+    deadband_parameters:
+      threshold_high: 3.0°C
+      threshold_low: -1.0°C
+      ki_multiplier: 0.05
+  
+    cool_output: output_dummy
+    heat_output: output_dummy
+
+    control_parameters:
+
+      # Living room parameters
+      kp: 0.90210
+      ki: 0.00217
+      kd: 93.77339
+      output_averaging_samples: 3
+      derivative_averaging_samples: 3
+      # Autotune parameters
+      # kp: 0
+      # ki: 0
+      # kd: 0
+
+      # Study PID parameters
+      # kp: 1.17530
+      # ki: 0.00884
+      # kd: 39.07869
+
+switch:
+  - platform: template
+    name: "PID Climate Autotune"
+    turn_on_action:
+      - climate.pid.autotune: daikin_pid_thermostat
+
+output:
+  - platform: template
+    id: output_dummy
+    type: float
+    write_action:
+      # id(my_climate).fan_mode
+      - lambda: |-
+          ESP_LOGD("custom", "PID output Power is %f", state);
+
+          if (state == 0) {
+            return;
+          }
+
+          // TODO
+          // Sync PID off to Daikin off
+          // Sync PID target to Daikin target
+          // 
+          // esphome_config git:(master) ✗ tail -f climate.log|egrep '(Mode changed|Fan speed|State is|Current Temperature)'
+          // esphome logs ir2.yaml >> climate.log 2>&1
+
+          auto call = id(test_ac_remote).make_call();
+          auto call_pid = id(daikin_pid_thermostat).make_call();
+      
+          // lo,med,high  esphome::climate::ClimateFanMode
+          auto current_daikin_fan_mode = id(test_ac_remote).fan_mode; 
+          auto current_daikin_mode = id(test_ac_remote).mode; // heat, cool, off
+
+          auto pid_action = id(daikin_pid_thermostat).action;
+          // auto s = LOG_ARG_STR(esphome::climate::climate_action_to_string(a));
+          bool changed = false;
+
+          if ( state >= 0.05 && 
+              pid_action == CLIMATE_ACTION_COOLING && 
+              current_daikin_mode != CLIMATE_MODE_COOL) {
+            ESP_LOGW("custom", "Mode changed to COOL");                
+            call.set_mode(CLIMATE_MODE_COOL);
+            changed = true;
+          }
+
+          if (state >= 0.05 && pid_action == CLIMATE_ACTION_HEATING && 
+              current_daikin_mode != CLIMATE_MODE_HEAT) {
+            ESP_LOGW("custom", "Mode changed to HEAT");                
+            call.set_mode(CLIMATE_MODE_HEAT);
+            changed = true;
+          }
+
+          if (pid_action == CLIMATE_ACTION_IDLE && 
+              current_daikin_mode != CLIMATE_MODE_OFF
+             ) {
+            ESP_LOGW("custom", "Mode changed to OFF");                
+            call.set_mode(CLIMATE_MODE_OFF);
+            changed = true;
+          }
+
+          if (state >=0 && state <  0.05 && current_daikin_mode != CLIMATE_MODE_OFF ) { 
+              ESP_LOGW("custom", "Mode change to OFF (<.05)");  
+              call.set_mode(CLIMATE_MODE_OFF); 
+              changed = true; 
+          }
+
+          if (state >= 0.05 && state <  0.30 && current_daikin_fan_mode != CLIMATE_FAN_LOW ) { 
+            ESP_LOGW("custom", "Fan speed changed to LOW");  
+            call.set_fan_mode( "LOW" );      
+            changed = true; 
+          }
+
+          if (state >= 0.30 && state <  0.75 && current_daikin_fan_mode != CLIMATE_FAN_MEDIUM ) { 
+            ESP_LOGW("custom", "Fan speed changed to MEDIUM");  
+            call.set_fan_mode( "MEDIUM" );      
+            changed = true; 
+          }
+
+          if (state >= 0.75 && state <=  1.00 && current_daikin_fan_mode != CLIMATE_FAN_HIGH ) { 
+            ESP_LOGW("custom", "Fan speed changed to HIGH");  
+            call.set_fan_mode( "HIGH" );      
+            changed = true; 
+          }
+
+          if (changed) {
+            call.perform();
+          }
+          
+          ESP_LOGD("custom", "-----------");

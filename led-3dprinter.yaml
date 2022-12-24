@@ -1,0 +1,16 @@
+substitutions:
+  friendly_name: LED 3d Printer
+  friendly_id: led_3d_printer
+
+packages:
+  device_base: !include device_base_esp32.yaml
+
+output:
+  - platform: ledc
+    pin: GPIO0
+    id: occ1
+
+light:
+  - platform: monochromatic
+    name: "LED 3d Printer"
+    output: occ1

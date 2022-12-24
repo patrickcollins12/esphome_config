@@ -1,5 +1,5 @@
 esphome:
-    name: $friendly_name
+    name: $friendly_id
     platform: ESP32
     board: esp32dev
 
@@ -10,12 +10,12 @@ wifi:
 logger:
 api:
 ota:
-captive_portal:
+# captive_portal:
 
 switch:
     - platform: restart
-      id: ${friendly_name}_restart
-      name: ESP32 Restart
+      id: ${friendly_id}_restart
+      name: ${friendly_name} ESP32 Restart
 
 time:
 - platform: homeassistant
@@ -25,39 +25,39 @@ time:
     minutes: 30
     hours: 0
     then:
-     - switch.turn_on: ${friendly_name}_restart
+     - switch.turn_on: ${friendly_id}_restart
     
 text_sensor:
   # Send IP Address
   - platform: wifi_info
     ip_address:
-        id: ${friendly_name}_ip_address
-        name: "IP Address"
+        id: ${friendly_id}_ip_address
+        name: "${friendly_name} IP Address"
 
     # Send Uptime in raw seconds
   - platform: template
-    name: Uptime
-    id: ${friendly_name}_uptime_human
+    name: ${friendly_name} Uptime
+    id: ${friendly_id}_uptime_human
     icon: mdi:clock-start
 
 # Sensors that the ESPhome unit is capable of reporting
 sensor:
 - platform: wifi_signal
-  id: ${friendly_name}_wifi_signal
-  name: "WiFi Signal"
-  update_interval: 10s
+  id: ${friendly_id}_wifi_signal
+  name: "${friendly_name} WiFi Signal"
+  update_interval: 300s
 
 - platform: uptime
   internal: true
-  id: ${friendly_name}_uptime_sensor
-  update_interval: 10s
+  id: ${friendly_id}_uptime_sensor
+  update_interval: 60s
   on_raw_value:
     then:
         - text_sensor.template.publish:
-            id: ${friendly_name}_uptime_human
+            id: ${friendly_id}_uptime_human
             # Custom C++ code to generate the result
             state: !lambda |-
-                int seconds = round(id(${friendly_name}_uptime_sensor).raw_state);
+                int seconds = round(id(${friendly_id}_uptime_sensor).raw_state);
                 int days = seconds / (24 * 3600);
                 seconds = seconds % (24 * 3600);
                 int hours = seconds / 3600;
