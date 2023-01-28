@@ -5,6 +5,14 @@ substitutions:
 packages:
   device_base: !include device_base_esp32.yaml
 
+# Sensors: closed = magnetic, open = no presence.
+# Top Sensor (measures door closed)
+# Bottom Sensor (measures door is open)
+# Top (closed) sensor is closed, DOOR IS CLOSED DOWN
+# Bottom (open) sensor is closed, DOOR HAS OPENED UP
+# Both sensors are open, DOOR IS MOVING
+# Both sensors are closed, BUG, rare, they're both in contact.
+
 cover:
   - platform: template
     name: "Garage Door v2"
@@ -23,15 +31,15 @@ cover:
 
     stop_action:
       - switch.turn_on: garage_door_relay
-    optimistic: true
-    assumed_state: true
+    optimistic: false
+    assumed_state: false
 
     lambda: |-
-      if (id(garage_open_sensor).state) {
+      if (!id(garage_open_sensor).state) {
         return COVER_OPEN;
 
       }
-      else if (id(garage_closed_sensor).state) {
+      else if (!id(garage_closed_sensor).state) {
         return COVER_CLOSED;
       }
       return 1;
@@ -52,22 +60,30 @@ switch:
       - delay: 1000ms
       - switch.turn_off: garage_door_relay
 
+
+# Sensors: closed = magnetic, open = no presence.
+# Top Sensor (measures door closed)
+# Bottom Sensor (measures door is open)
+# Top (closed) sensor is closed, DOOR IS CLOSED DOWN
+# Bottom (open) sensor is closed, DOOR HAS OPENED UP
+# Both sensors are open, DOOR IS MOVING
+# Both sensors are closed, BUG, rare, they're both in contact.
+
 # Define Hall Effect Sensors
 binary_sensor:
   - platform: gpio
-    name: "Garage Door Open Hall Sensor (Top)"
+    name: "Garage Door Open (Bottom) Hall Sensor"
     id: garage_open_sensor
     device_class: garage_door
-    internal: true
+    #internal: true
     pin: 
-      number: GPIO33
-      inverted: true
+      number: GPIO32
       mode:
         pullup: true
         input: true
     filters:
       - delayed_off: 500ms
-    on_press:
+    on_release:
       then:
         - cover.template.publish:
             id: garage_door_v2
@@ -76,22 +92,23 @@ binary_sensor:
               return COVER_OPEN;
 
   - platform: gpio
-    name: "Garage Door Closed Hall Sensor (Bottom)"
+    name: "Garage Door Closed (Top) Hall Sensor"
     id: garage_closed_sensor
-    internal: true
+    device_class: garage_door
+    #internal: true
     pin: 
-      number: GPIO32
-      inverted: true
+      number: GPIO33
       mode:
         pullup: true
         input: true
     filters:
       - delayed_off: 500ms
     
-    on_press:
+    on_release:
       then:
         - cover.template.publish:
             id: garage_door_v2
             state: !lambda |-
               id(garage_door_v2).current_operation = COVER_OPERATION_IDLE;
               return COVER_CLOSED;
+              

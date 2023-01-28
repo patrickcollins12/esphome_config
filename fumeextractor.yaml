@@ -1,0 +1,51 @@
+substitutions:
+  friendly_name: fumeextractor
+  friendly_id: fumeextractor
+
+packages:
+  # device_base: !include device_base_esp32_nonetwork.yaml
+  device_base: !include device_base_8266_nodemcu.yaml
+
+  # ESP32
+# sensor:
+#   - platform: adc
+#     name: "fanpot"
+#     pin: GPIO2
+#     accuracy_decimals: 2
+#     update_interval: 100ms
+#     attenuation: auto
+#     filters:
+#       - calibrate_linear:
+#         - 0.075 -> 0.0
+#         - 3.148 -> 3.3
+#       - delta: 0.01
+
+output:
+  - platform: esp8266_pwm
+    pin: D0
+    id: fan
+    frequency: 25kHz
+    # inverted: false
+    # min_power: 0.01
+    # max_power: 0.75
+  
+sensor:
+  - platform: adc
+    name: "fanpot"
+    id: fanpot
+    pin: A0
+    raw: true
+    accuracy_decimals: 1
+    update_interval: 100ms
+    # attenuation: auto
+    filters:
+      - calibrate_linear:
+        - 0 -> 0.0
+        - 1024 -> 1000
+      - delta: 10
+      - multiply: 0.001
+    on_value:
+      then:
+        - output.set_level:
+            id: fan
+            level: !lambda return id(fanpot).state;

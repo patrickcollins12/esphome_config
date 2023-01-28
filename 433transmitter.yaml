@@ -25,4 +25,3 @@ remote_receiver:
 #   filter: 250us
 #   idle: 4ms
 #   buffer_size: 2kb
-  

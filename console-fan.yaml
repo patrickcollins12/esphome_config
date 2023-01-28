@@ -3,6 +3,14 @@ substitutions:
 
 esphome:
   name: console-fan-v2
+  # includes:
+  #   - pid_simulator.h
+
+custom_component:
+  - lambda: |-
+      auto *my_component = new esphome::pid::PIDSimulator();
+      App.register_component(my_component);
+      return {my_component};
 
 globals:
   - id: dhttemp
@@ -12,7 +20,7 @@ globals:
 
 #########################
 # ESP32 AND NETWORK SETUP
-
+  
 esp32:
   board: nodemcu-32s
   framework:
@@ -180,7 +188,9 @@ text_sensor:
     id: uptime_human
     icon: mdi:clock-start
 
+
 sensor:
+
   # Send WiFi signal strength & uptime to HA
   - platform: wifi_signal
     name: $friendly_name WiFi Strength

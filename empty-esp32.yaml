@@ -1,0 +1,6 @@
+substitutions:
+  friendly_name: "Test"
+  friendly_id: "test"
+
+packages:
+  device_base: !include device_base_esp32.yaml

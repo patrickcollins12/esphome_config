@@ -1,5 +1,6 @@
 substitutions:
   friendly_name: pmsx003
+  friendly_id: pmsx003
 
 packages:
   device_base: !include device_base_esp32.yaml

@@ -1,0 +1,25 @@
+substitutions:
+  friendly_name: "CT clamp"
+  friendly_id: "ctclamp"
+
+packages:
+  device_base: !include device_base_esp32.yaml
+
+sensor:
+  - platform: ct_clamp
+    sensor: adc_sensor
+    name: "Measured Current"
+    id: current
+    sample_duration: 600ms
+    update_interval: 3000ms
+    filters:
+      - calibrate_linear:
+          - 0.012 -> 0
+          - 0.025 -> 1.0
+
+  - platform: adc
+    pin: GPIO32
+    id: adc_sensor
+    attenuation: 11db
+    # update_interval: never
+    update_interval: 3000ms
