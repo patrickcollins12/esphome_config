@@ -1,0 +1,10 @@
+esphome:
+  name: $friendly_id
+
+esp8266:
+  board: nodemcuv2
+  restore_from_flash: true
+  framework:
+    version: recommended
+
+#logger:
