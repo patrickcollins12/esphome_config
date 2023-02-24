@@ -1,0 +1,148 @@
+substitutions:
+  friendly_name: pidcontrol
+  friendly_id: pidcontrol
+
+packages:
+  device_base: !include device_base_esp32.yaml
+
+button:
+  - platform: template
+    name: "PID Control Autotune"
+    on_press:
+      - pid.autotune: humidity_controller
+
+sensor:
+  # - platform: custom
+  #   lambda: |-
+  #     pid_shared::PIDSimulator *p = new pid_shared::PIDSimulator();
+  #     auto my_sensor = p->sensor;
+  #     App.register_component(my_sensor);
+  #     return {my_sensor};
+
+  # sensors:
+  #   name: "Simulator Sensor"
+  #   id: simulator_sensor
+
+  - platform: pid
+    name: "PID Climate Result"
+    type: RESULT
+    id: humidity_controller
+
+  # GET TEMP/HUMIDITY FROM DHT11
+  - platform: dht
+    pin: 33
+    update_interval: 3s
+    temperature:
+      name: "${friendly_name} Temperature"
+      id: ${friendly_id}_temperature
+      accuracy_decimals: 3
+      filters:
+        - exponential_moving_average:
+            alpha: 0.1
+            send_every: 1
+      # on_value:
+      #   then:
+      #     - switch.turn_on: humidity_controller
+
+output:
+  # - platform: custom
+  #   lambda: |-
+  #     auto sim = new pid_shared::PIDSimulator();
+  #     App.register_component(sim);
+  #     return {sim};
+
+  #   type: float
+  #   outputs:
+  #     id: pid_simulator
+
+  - platform: ledc
+    id: console_heat_speed
+    pin: GPIO32
+
+  # Wire this pin (15) into the PWM pin of your 12v fan
+  # ledc is the name of the pwm output system on an esp32
+  - platform: ledc
+    id: console_fan_speed
+    pin: GPIO25
+
+    # 25KHz is standard PC fan frequency, minimises buzzing
+    frequency: "25000 Hz"
+
+    # my fans stop working below 13% powerful.
+    # also they're  powerful and loud, cap their max speed to 80%
+    min_power: 13%
+    max_power: 80%
+
+number:
+  - platform: template
+    name: "PID Target Value"
+    optimistic: true
+    restore_value: true
+    initial_value: 50
+    min_value: 0
+    max_value: 100
+    step: 1
+    on_value:
+      then:
+        lambda: id(humidity_controller).set_target_value( x );
+
+  - platform: template
+    name: "kp"
+    optimistic: true
+    restore_value: true
+    initial_value: 0.1
+    min_value: 0
+    max_value: 5
+    step: .01
+    on_value:
+      then:
+        lambda: id(humidity_controller).set_kp( x );
+
+  - platform: template
+    name: "ki"
+    optimistic: true
+    restore_value: true
+    initial_value: 0.001
+    min_value: 0
+    max_value: .3
+    step: .001
+    on_value:
+      then:
+        lambda: id(humidity_controller).set_ki( x );
+
+switch:
+  - platform: template
+    name: "PID Switch"
+    id: pid_switch
+    optimistic: true
+    restore_state: true
+
+  - platform: template
+    name: $friendly_name Reset Integral
+    turn_on_action:
+      - pid.reset_integral_term: humidity_controller
+
+pid_control:
+  - id: humidity_controller
+    name: "Bathroom Humidity Controller"
+    # enable_switch: pid_switch
+    sensor: ${friendly_id}_temperature
+    # sensor: simulator_sensor
+
+    target_value: 23
+    decrease_output: console_fan_speed
+    # increase_output: console_fan_speed
+
+    control_parameters:
+      kp: 1.0
+      ki: 0.0
+      kd: 0.0
+
+  # - id: second_controller
+  #   default_target: 22
+  #   increase_output: increase_auger_speed
+  #   sensor: bbq_sensor
+  #   control_parameters:
+  #     kp: 0.0
+  #     ki: 0.0
+  #     kd: 0.0
