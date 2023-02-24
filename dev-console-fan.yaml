@@ -6,11 +6,11 @@ esphome:
   # includes:
   #   - pid_simulator.h
 
-custom_component:
-  - lambda: |-
-      auto *my_component = new esphome::pid::PIDSimulator();
-      App.register_component(my_component);
-      return {my_component};
+# custom_component:
+#   - lambda: |-
+#       auto *my_component = new esphome::pid::PIDSimulator();
+#       App.register_component(my_component);
+#       return {my_component};
 
 globals:
   - id: dhttemp
@@ -383,6 +383,10 @@ output:
     id: console_fan_speed
     pin: GPIO25
 
+  - platform: ledc
+    id: console_heat_speed
+    pin: GPIO27
+
     # 25KHz is standard PC fan frequency, minimises buzzing
     frequency: "25000 Hz"
 
@@ -461,7 +465,7 @@ climate:
           state: !lambda "return id(console_thermostat).get_deadband_output_samples();"
 
     # dummy heater. enable this if using autotune
-    # heat_output: console_heat_speed
+    heat_output: console_heat_speed
 
     # The extents of the HA Thermostat
     visual:
@@ -494,86 +498,10 @@ switch:
     name: $friendly_name Reset Integral
     turn_on_action:
       - climate.pid.reset_integral_term: console_thermostat
-# #### DISPLAY
 
-# binary_sensor:
-#   - platform: status
-#     name: "Node Status"
-#     id: system_status
-
-# color:
-#   - id: my_red
-#     red: 100%
-#     green: 0%
-#     blue: 0%
-#   - id: my_yellow
-#     red: 100%
-#     green: 100%
-#     blue: 0%
-#   - id: my_green
-#     red: 0%
-#     green: 100%
-#     blue: 0%
-#   - id: my_blue
-#     red: 0%
-#     green: 0%
-#     blue: 100%
-#   - id: my_gray
-#     red: 50%
-#     green: 50%
-#     blue: 50%
-
-# font:
-#   - file: "Helvetica.ttf"
-#     id: helvetica_48
-#     size: 48
-#     # glyphs:
-#     # - '°'
-#   - file: "Helvetica.ttf"
-#     id: helvetica_24
-#     size: 24
-#     # glyphs:
-#     # - '°'
-#   - file: "Helvetica.ttf"
-#     id: helvetica_12
-#     size: 12
-#     # glyphs:
-#     # - '°'
-
-# spi:
-#   clk_pin: GPIO18
-#   mosi_pin: GPIO19
-
-# display:
-#   - platform: st7789v
-#     backlight_pin: GPIO4
-#     model: TTGO TDisplay 135x240
-#     cs_pin: GPIO5
-#     dc_pin: GPIO16
-#     reset_pin: GPIO23
-#     rotation: 0
-#     lambda: |-
-
-#       // draw the two blue rectangles
-#       it.rectangle(0,  0, it.get_width(), it.get_height(), id(my_blue));
-#       it.rectangle(0, 30, it.get_width(), it.get_height(), id(my_blue));   // header bar
-
-#       // Uptime
-#       it.print(5, 5, id(helvetica_24), id(my_gray), TextAlign::TOP_LEFT, id(uptime_human).state.c_str());
-
-#       // Online / Offline
-#       if (id(system_status).state) {
-#         it.print(235, 5, id(helvetica_24), id(my_green), TextAlign::TOP_RIGHT, "Online" );
-#       }  else {
-#         it.print(235, 5, id(helvetica_24), id(my_red),   TextAlign::TOP_RIGHT, "Offline" );
-#       }
-
-#       // temp and humidity
-#       char buffer[64];
-#       snprintf(buffer, sizeof buffer, "%0.1f°C  %.0f%%", id(console_fan_temperature).state, id(console_fan_humidity).state  );
-#       it.print((240 / 2), (140 / 3) * 1 + 5, id(helvetica_24), id(my_gray), TextAlign::CENTER, buffer );
-
-#       // Running / Off
-#       //char buffer2[64];
-#       //snprintf(buffer2, sizeof buffer2, "%s", (id(sw420).state)?"Running":"Off"  );
-#       //it.print((240 / 2), (140 / 3) * 2 + 5, id(helvetica_48), id(my_gray), TextAlign::CENTER, buffer2 );
+button:
+  - platform: template
+    name: "PID Climate Autotune"
+    on_press:
+      - climate.pid.autotune: console_thermostat
+      

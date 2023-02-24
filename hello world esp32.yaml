@@ -1,5 +1,5 @@
 substitutions:
-  friendly_name: basic
+  friendly_name: pidcontrol
 
 esphome:
   name: $friendly_name
@@ -16,7 +16,6 @@ esp32:
 logger:
 api:
 ota:
-captive_portal:
 
 text_sensor:
   # Send IP Address
