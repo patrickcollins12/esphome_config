@@ -1,5 +1,5 @@
 esphome:
-  name: espvibration1
+  name: multisensor1
   platform: ESP32
   board: esp32dev
 wifi:
